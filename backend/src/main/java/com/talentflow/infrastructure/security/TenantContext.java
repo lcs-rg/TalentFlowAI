@@ -12,8 +12,18 @@ public final class TenantContext {
     private static final ThreadLocal<UUID> USER = new ThreadLocal<>();
     private static final ThreadLocal<UUID> TEAM = new ThreadLocal<>();
     private static final ThreadLocal<String> ROLE = new ThreadLocal<>();
+    private static final ThreadLocal<UUID> CANDIDATE = new ThreadLocal<>();
 
     private TenantContext() {}
+
+    // --- Candidate context ---
+    public static void setCandidate(UUID candidateId) { CANDIDATE.set(candidateId); }
+    public static UUID getCandidate() { return CANDIDATE.get(); }
+    public static UUID requireCandidate() {
+        UUID id = CANDIDATE.get();
+        if (id == null) throw new IllegalStateException("Candidate context not set");
+        return id;
+    }
 
     public static void setCompany(UUID companyId) { COMPANY.set(companyId); }
     public static UUID getCompany() { return COMPANY.get(); }
@@ -42,5 +52,6 @@ public final class TenantContext {
         USER.remove();
         TEAM.remove();
         ROLE.remove();
+        CANDIDATE.remove();
     }
 }

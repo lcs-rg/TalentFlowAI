@@ -13,5 +13,6 @@ public interface CandidateRepository {
     Optional<Candidate> findById(UUID id);
     Page<Candidate> search(String search, Pageable pageable);
     Optional<Candidate> findByEmail(String email);
+    Optional<Candidate> findByEmailWithPassword(String email);
     void softDelete(UUID id, UUID deletedBy, java.time.Instant deletedAt);
 }

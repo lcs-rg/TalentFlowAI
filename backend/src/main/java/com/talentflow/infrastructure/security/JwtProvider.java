@@ -44,6 +44,19 @@ public class JwtProvider {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    public String generateCandidateToken(UUID candidateId, String email, String name) {
+        return Jwts.builder()
+                .subject(candidateId.toString())
+                .claim("email", email)
+                .claim("name", name)
+                .claim("role", "CANDIDATE")
+                .claim("type", "candidate")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .signWith(secretKey)
+                .compact();
+    }
+
     public long getAccessTokenExpiration() { return accessTokenExpiration; }
     public long getRefreshTokenTtl() { return refreshTokenTtl; }
 

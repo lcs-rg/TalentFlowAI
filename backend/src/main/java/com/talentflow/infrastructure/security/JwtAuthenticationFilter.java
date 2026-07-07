@@ -35,26 +35,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = jwtProvider.validateToken(token);
+            String tokenType = claims.get("type", String.class);
 
-            UUID userId = UUID.fromString(claims.getSubject());
-            UUID companyId = UUID.fromString(claims.get("company_id", String.class));
-            String email = claims.get("email", String.class);
-            String role = claims.get("role", String.class);
+            if ("candidate".equals(tokenType)) {
+                // Candidate token — no company context
+                UUID candidateId = UUID.fromString(claims.getSubject());
+                String email = claims.get("email", String.class);
+                TenantContext.setCandidate(candidateId);
 
-            @SuppressWarnings("unchecked")
-            List<String> permissions = claims.get("permissions", List.class);
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(email, null,
+                                List.of(new SimpleGrantedAuthority("ROLE_CANDIDATE"))));
+            } else {
+                // Company user token
+                UUID userId = UUID.fromString(claims.getSubject());
+                UUID companyId = UUID.fromString(claims.get("company_id", String.class));
+                String email = claims.get("email", String.class);
+                String role = claims.get("role", String.class);
 
-            TenantContext.setCompany(companyId);
-            TenantContext.setUser(userId);
-            TenantContext.setRole(role);
+                @SuppressWarnings("unchecked")
+                List<String> permissions = claims.get("permissions", List.class);
 
-            List<SimpleGrantedAuthority> authorities = permissions != null
-                    ? permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-                    : List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                TenantContext.setCompany(companyId);
+                TenantContext.setUser(userId);
+                TenantContext.setRole(role);
 
-            SecurityContextHolder.getContext().setAuthentication(
-                    new UsernamePasswordAuthenticationToken(email, null, authorities));
+                List<SimpleGrantedAuthority> authorities = permissions != null
+                        ? permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
+                        : List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(email, null, authorities));
+            }
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
         }

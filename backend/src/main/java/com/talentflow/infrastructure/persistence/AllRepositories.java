@@ -148,6 +148,7 @@ class CandidateJpaEntity {
     @Column(name = "updated_at") Instant updatedAt;
     @Column(name = "deleted_at") Instant deletedAt;
     @Column(name = "deleted_by") UUID deletedBy;
+    @Column(name = "password_hash") String passwordHash;
 
     public UUID getId() { return id; } public void setId(UUID v) { this.id = v; }
     public String getName() { return name; } public void setName(String v) { this.name = v; }
@@ -161,6 +162,7 @@ class CandidateJpaEntity {
     public Instant getUpdatedAt() { return updatedAt; } public void setUpdatedAt(Instant v) { this.updatedAt = v; }
     public Instant getDeletedAt() { return deletedAt; } public void setDeletedAt(Instant v) { this.deletedAt = v; }
     public UUID getDeletedBy() { return deletedBy; } public void setDeletedBy(UUID v) { this.deletedBy = v; }
+    public String getPasswordHash() { return passwordHash; } public void setPasswordHash(String v) { this.passwordHash = v; }
 }
 
 interface CandidateJpaRepository extends JpaRepository<CandidateJpaEntity, UUID> {
@@ -178,12 +180,13 @@ class CandidateRepositoryImpl implements CandidateRepository {
     CandidateRepositoryImpl(CandidateJpaRepository jpa) { this.jpa = jpa; }
 
     @Override public Candidate save(Candidate c) {
-        CandidateJpaEntity e = new CandidateJpaEntity();
+        CandidateJpaEntity e = jpa.findById(c.getId()).orElse(new CandidateJpaEntity());
         e.setId(c.getId()); e.setName(c.getName());
         e.setEmail(c.getEmail()); e.setPhone(c.getPhone());
         e.setResumeUrl(c.getResumeUrl()); e.setResumeText(c.getResumeText());
         e.setTags("[]"); e.setNotes(c.getNotes());
         e.setCreatedAt(c.getCreatedAt()); e.setUpdatedAt(c.getUpdatedAt());
+        if (c.getPasswordHash() != null) e.setPasswordHash(c.getPasswordHash());
         jpa.save(e); return c;
     }
 
@@ -199,6 +202,15 @@ class CandidateRepositoryImpl implements CandidateRepository {
     @Override
     public Optional<Candidate> findByEmail(String email) {
         return jpa.findByEmailIgnoreCase(email).map(e -> new Candidate(e.getId(), e.getName(), e.getEmail()));
+    }
+
+    @Override
+    public Optional<Candidate> findByEmailWithPassword(String email) {
+        return jpa.findByEmailIgnoreCase(email).map(e -> {
+            Candidate c = new Candidate(e.getId(), e.getName(), e.getEmail());
+            if (e.getPasswordHash() != null) c.setPassword(e.getPasswordHash());
+            return c;
+        });
     }
 
     @Override

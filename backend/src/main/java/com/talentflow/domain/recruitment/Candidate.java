@@ -16,6 +16,7 @@ public class Candidate extends BaseEntity {
     private String resumeText;
     private List<String> tags;
     private String notes;
+    private String passwordHash;
 
     public Candidate(UUID id, String name, String email) {
         super(id);
@@ -23,6 +24,13 @@ public class Candidate extends BaseEntity {
         setEmail(email);
         this.tags = new ArrayList<>();
     }
+
+    public void setPassword(String encodedPassword) {
+        this.passwordHash = encodedPassword;
+    }
+
+    public boolean hasPassword() { return passwordHash != null; }
+    public String getPasswordHash() { return passwordHash; }
 
     public void updateResume(String resumeUrl, String resumeText) {
         this.resumeUrl = resumeUrl;
