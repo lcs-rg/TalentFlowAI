@@ -32,8 +32,9 @@ export default function NewJobPage() {
       const { data } = await api.post("/api/v1/jobs", payload);
       toast.success("Vaga publicada!");
       router.push(`/jobs/${data.data.id}`);
-    } catch {
-      toast.error("Erro ao criar vaga");
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.response?.data?.error?.errors?.[0]?.message || "Erro ao criar vaga";
+      toast.error(msg);
     } finally { setLoading(false); }
   }
 
