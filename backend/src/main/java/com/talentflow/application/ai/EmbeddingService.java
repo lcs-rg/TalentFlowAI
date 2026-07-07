@@ -1,11 +1,13 @@
 package com.talentflow.application.ai;
 
 import com.talentflow.infrastructure.ai.AIServiceClient;
+import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.*;
 
 @Service
@@ -26,11 +28,11 @@ public class EmbeddingService {
         String text = (title != null ? title : "") + " " + (description != null ? description : "");
         var result = aiClient.embed(text);
         if (result.success() && result.embedding() != null) {
-            String vector = arrayToPgVector(result.embedding());
+            PGobject vector = toPgVector(result.embedding());
             jdbc.update("""
                 INSERT INTO job_embeddings (id, job_id, embedding, model_version, created_at)
-                VALUES (?, ?, ?::vector, 'all-MiniLM-L6-v2', NOW())
-                ON CONFLICT (job_id) DO UPDATE SET embedding = ?::vector, created_at = NOW()
+                VALUES (?, ?, ?, 'all-MiniLM-L6-v2', NOW())
+                ON CONFLICT (job_id) DO UPDATE SET embedding = ?, created_at = NOW()
                 """, UUID.randomUUID(), jobId, vector, vector);
             log.info("Job embedding stored: jobId={}, dims={}", jobId, result.dimensions());
         } else {
@@ -45,11 +47,11 @@ public class EmbeddingService {
         if (resumeText == null || resumeText.isBlank()) return;
         var result = aiClient.embed(resumeText);
         if (result.success() && result.embedding() != null) {
-            String vector = arrayToPgVector(result.embedding());
+            PGobject vector = toPgVector(result.embedding());
             jdbc.update("""
                 INSERT INTO candidate_embeddings (id, candidate_id, embedding, model_version, created_at)
-                VALUES (?, ?, ?::vector, 'all-MiniLM-L6-v2', NOW())
-                ON CONFLICT (candidate_id) DO UPDATE SET embedding = ?::vector, created_at = NOW()
+                VALUES (?, ?, ?, 'all-MiniLM-L6-v2', NOW())
+                ON CONFLICT (candidate_id) DO UPDATE SET embedding = ?, created_at = NOW()
                 """, UUID.randomUUID(), candidateId, vector, vector);
             log.info("Candidate embedding stored: candidateId={}, dims={}", candidateId, result.dimensions());
         } else {
@@ -59,15 +61,12 @@ public class EmbeddingService {
 
     /**
      * Semantic search: find top-K candidates similar to a job.
-     * Returns candidate IDs ordered by cosine similarity (highest first).
      */
     public List<UUID> searchCandidatesByJob(UUID jobId, int topK) {
-        // Get job embedding
         var rows = jdbc.queryForList(
             "SELECT embedding FROM job_embeddings WHERE job_id = ?", jobId);
         if (rows.isEmpty()) return List.of();
 
-        // Query candidate embeddings by cosine similarity
         List<Map<String, Object>> results = jdbc.queryForList("""
             SELECT ce.candidate_id, 1 - (ce.embedding <=> (SELECT embedding FROM job_embeddings WHERE job_id = ?)) AS similarity
             FROM candidate_embeddings ce
@@ -102,13 +101,24 @@ public class EmbeddingService {
                 .toList();
     }
 
-    private String arrayToPgVector(double[] arr) {
+    /**
+     * Converts a double[] to a PostgreSQL vector PGobject for parameterized queries.
+     * Safe: no string concatenation into SQL.
+     */
+    private PGobject toPgVector(double[] arr) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < arr.length; i++) {
             if (i > 0) sb.append(",");
             sb.append(arr[i]);
         }
         sb.append("]");
-        return sb.toString();
+        try {
+            PGobject pg = new PGobject();
+            pg.setType("vector");
+            pg.setValue(sb.toString());
+            return pg;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create PGvector object", e);
+        }
     }
 }
