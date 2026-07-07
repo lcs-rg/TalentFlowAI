@@ -1,0 +1,95 @@
+spring:
+  application:
+    name: talentflow
+
+  datasource:
+    # Supabase PostgreSQL — pooler (Transaction mode)
+    url: ${DATABASE_URL:jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:6543/postgres?prepareThreshold=0}
+    username: ${DATABASE_USERNAME:postgres.dymntlcqywcovjwvcrlm}
+    password: ${DATABASE_PASSWORD:QYHDTlxDpYIIJEw8}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Flyway manages schema; Hibernate only validates
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc.batch_size: 20
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    clean-disabled: true
+    skip-default-callbacks: true
+    connect-retries: 3
+    # Supabase may have extensions pre-created; Flyway handles idempotent CREATE IF NOT EXISTS
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${PORT:8080}
+
+# JWT
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-change-in-production-min-64-chars-long!!}
+    access-token-expiration: 900000       # 15 minutes
+    refresh-token-expiration: 2592000000   # 30 days
+
+  # OpenAI
+  openai:
+    api-key: ${OPEN...EY:}
+    embedding-model: text-embedding-3-small
+    chat-model: gpt-4o-mini
+
+  # AI Service (Python)
+  ai-service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}
+
+  # Supabase (Storage + DB admin)
+  supabase:
+    project-ref: ${SUPABASE_PROJECT_REF:}
+    url: ${SUPABASE_URL:}
+    anon-key: ${SUPABASE_ANON_KEY:}
+    service-key: ${SUPABASE_SERVICE_KEY:}
+    bucket: talentflow-resumes
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+logging:
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%level","correlationId":"%X{correlationId}","logger":"%logger","message":"%msg"}%n'
+  level:
+    com.talentflow: DEBUG
+    org.springframework.security: INFO
+    org.flywaydb: INFO
+    com.zaxxer.hikari: INFO
