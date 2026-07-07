@@ -39,6 +39,23 @@ public class AIServiceClient {
         }
     }
 
+    public record EmbedResponse(boolean success, double[] embedding, int dimensions, String model, Map<String, Object> error) {}
+
+    public EmbedResponse embed(String text) {
+        log.info("Calling AI embed, text length={}", text != null ? text.length() : 0);
+        try {
+            return restClient.post()
+                    .uri("/embed")
+                    .body(Map.of("text", text))
+                    .retrieve()
+                    .body(EmbedResponse.class);
+        } catch (Exception e) {
+            log.error("AI embed failed: {}", e.getMessage());
+            return new EmbedResponse(false, null, 0, null,
+                    Map.of("code", "EMBED_ERROR", "message", e.getMessage()));
+        }
+    }
+
     public record MatchResponse(boolean success, Map<String, Object> data, Map<String, Object> error, Map<String, Object> metadata) {}
 
     public MatchResponse match(String jobDescription, String candidateResume) {
