@@ -55,11 +55,15 @@ app:
     access-token-expiration: 900000       # 15 minutes
     refresh-token-expiration: 2592000000   # 30 days
 
-  # OpenAI
-  openai:
-    api-key: ${OPEN...EY:}
-    embedding-model: text-embedding-3-small
-    chat-model: gpt-4o-mini
+  # GROQ (LLM)
+  groq:
+    api-key: ${GROQ_API_KEY:}
+    chat-model: ${GROQ_MODEL:mixtral-8x7b-32768}
+
+  # Embeddings (local via AI Service)
+  embedding:
+    model: all-MiniLM-L6-v2
+    dimensions: 384
 
   # AI Service (Python)
   ai-service:
