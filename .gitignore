@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.next/
+
+# Java
+backend/build/
+backend/target/
+backend/.gradle/
+backend/bin/
+backend/out/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Docker
+docker/volumes/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Supabase
+supabase/.temp/
