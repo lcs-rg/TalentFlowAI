@@ -3,6 +3,8 @@ package com.talentflow.infrastructure.security;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,13 +12,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtProvider jwtProvider;
 
     public JwtAuthenticationFilter(JwtProvider jwtProvider) { this.jwtProvider = jwtProvider; }
@@ -38,36 +39,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String tokenType = claims.get("type", String.class);
 
             if ("candidate".equals(tokenType)) {
-                // Candidate token — no company context
                 UUID candidateId = UUID.fromString(claims.getSubject());
-                String email = claims.get("email", String.class);
                 TenantContext.setCandidate(candidateId);
 
                 SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken(email, null,
+                        new UsernamePasswordAuthenticationToken(
+                                claims.get("email", String.class), null,
                                 List.of(new SimpleGrantedAuthority("ROLE_CANDIDATE"))));
             } else {
-                // Company user token
                 UUID userId = UUID.fromString(claims.getSubject());
-                UUID companyId = UUID.fromString(claims.get("company_id", String.class));
+                Object companyIdRaw = claims.get("company_id");
+                UUID companyId = companyIdRaw != null
+                        ? UUID.fromString(companyIdRaw.toString()) : null;
                 String email = claims.get("email", String.class);
                 String role = claims.get("role", String.class);
 
-                @SuppressWarnings("unchecked")
-                List<String> permissions = claims.get("permissions", List.class);
-
-                TenantContext.setCompany(companyId);
+                if (companyId != null) TenantContext.setCompany(companyId);
                 TenantContext.setUser(userId);
-                TenantContext.setRole(role);
+                if (role != null) TenantContext.setRole(role);
 
-                List<SimpleGrantedAuthority> authorities = permissions != null
-                        ? permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-                        : List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                // Extract permissions safely
+                List<String> permissions = new ArrayList<>();
+                Object permRaw = claims.get("permissions");
+                if (permRaw instanceof List<?> list) {
+                    for (Object item : list) {
+                        if (item != null) permissions.add(item.toString());
+                    }
+                }
+
+                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                if (role != null) authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                for (String p : permissions) {
+                    authorities.add(new SimpleGrantedAuthority(p));
+                }
 
                 SecurityContextHolder.getContext().setAuthentication(
                         new UsernamePasswordAuthenticationToken(email, null, authorities));
             }
         } catch (Exception e) {
+            log.warn("JWT validation failed: {} — {}", e.getClass().getSimpleName(), e.getMessage());
             SecurityContextHolder.clearContext();
         }
 

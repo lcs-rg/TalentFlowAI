@@ -184,7 +184,7 @@ class CandidateRepositoryImpl implements CandidateRepository {
         e.setId(c.getId()); e.setName(c.getName());
         e.setEmail(c.getEmail()); e.setPhone(c.getPhone());
         e.setResumeUrl(c.getResumeUrl()); e.setResumeText(c.getResumeText());
-        e.setTags("[]"); e.setNotes(c.getNotes());
+        e.setTags(null); e.setNotes(c.getNotes());
         e.setCreatedAt(c.getCreatedAt()); e.setUpdatedAt(c.getUpdatedAt());
         if (c.getPasswordHash() != null) e.setPasswordHash(c.getPasswordHash());
         jpa.save(e); return c;
