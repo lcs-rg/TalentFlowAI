@@ -1,9 +1,11 @@
 package com.talentflow.presentation.api.v1;
 
 import com.talentflow.domain.recruitment.*;
+import com.talentflow.application.ai.EmbeddingService;
 import com.talentflow.infrastructure.ai.AIServiceClient;
 import com.talentflow.infrastructure.security.TenantContext;
 import com.talentflow.presentation.dto.ApiResponse;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +19,12 @@ public class AIController {
     private final JobRepository jobRepo;
     private final CandidateRepository candidateRepo;
     private final ApplicationRepository applicationRepo;
+    private final EmbeddingService embeddingService;
 
-    public AIController(AIServiceClient ai, JobRepository jr, CandidateRepository cr, ApplicationRepository ar) {
-        this.aiClient = ai; this.jobRepo = jr; this.candidateRepo = cr; this.applicationRepo = ar;
+    public AIController(AIServiceClient ai, JobRepository jr, CandidateRepository cr,
+                        ApplicationRepository ar, EmbeddingService es) {
+        this.aiClient = ai; this.jobRepo = jr; this.candidateRepo = cr;
+        this.applicationRepo = ar; this.embeddingService = es;
     }
 
     @PostMapping("/match/{jobId}/{candidateId}")
@@ -115,5 +120,47 @@ public class AIController {
         response.put("total", results.size());
         response.put("results", results);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    // ─── V2: Recommendations ──────────────────────────
+
+    @GetMapping("/recommend-candidates/{jobId}")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> recommendCandidates(
+            @PathVariable UUID jobId, @RequestParam(defaultValue = "10") int topK) {
+        TenantContext.requireCompany();
+        List<UUID> candidateIds = embeddingService.searchCandidatesByJob(jobId, topK);
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (UUID cid : candidateIds) {
+            candidateRepo.findById(cid).ifPresent(c -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", c.getId());
+                m.put("name", c.getName());
+                m.put("email", c.getEmail());
+                m.put("hasResume", c.getResumeText() != null && !c.getResumeText().isBlank());
+                results.add(m);
+            });
+        }
+        return ResponseEntity.ok(ApiResponse.ok(results));
+    }
+
+    @GetMapping("/recommend-jobs/{candidateId}")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> recommendJobs(
+            @PathVariable UUID candidateId, @RequestParam(defaultValue = "5") int topK) {
+        List<UUID> jobIds = embeddingService.searchJobsByCandidate(candidateId, topK);
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (UUID jid : jobIds) {
+            jobRepo.findById(jid).ifPresent(j -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", j.getId());
+                m.put("title", j.getTitle());
+                m.put("department", j.getDepartment());
+                m.put("location", j.getLocation());
+                m.put("status", j.getStatus().name());
+                results.add(m);
+            });
+        }
+        return ResponseEntity.ok(ApiResponse.ok(results));
     }
 }

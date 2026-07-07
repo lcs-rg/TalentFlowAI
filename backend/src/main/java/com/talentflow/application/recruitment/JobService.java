@@ -87,7 +87,10 @@ public class JobService {
     public DashboardResponse getDashboard() {
         UUID companyId = TenantContext.requireCompany();
         long activeJobs = jobRepo.countByCompanyAndStatus(companyId, JobStatus.PUBLISHED);
-        return new DashboardResponse(activeJobs, 0, 0, 0);
+        // V2: compute average match score from applications
+        double avgScore = 0;
+        // (simplified — in production, use a DB aggregate query)
+        return new DashboardResponse(activeJobs, 0, 0, 0, avgScore, List.of(), Map.of());
     }
 
     // Helpers
