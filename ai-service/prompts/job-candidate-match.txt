@@ -1,0 +1,18 @@
+Analise a compatibilidade entre a descrição da vaga e o currículo do candidato.
+
+Retorne um JSON com:
+- overall_score: número entre 0 e 1
+- skills_match: número entre 0 e 1 (similaridade de habilidades)
+- experience_match: número entre 0 e 1 (similaridade de experiência)
+- education_match: número entre 0 e 1
+- strengths: array de strings com pontos fortes do candidato para esta vaga
+- gaps: array de strings com habilidades/experiências que faltam
+- explanation: string explicando o score em português (máximo 300 caracteres)
+
+Retorne APENAS JSON válido.
+
+Descrição da vaga:
+{{job_description}}
+
+Currículo do candidato:
+{{candidate_resume}}

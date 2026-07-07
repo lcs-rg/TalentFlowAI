@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/talentflow_test
+    username: talentflow
+    password: talentflow_dev
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  flyway:
+    enabled: false
+
+app:
+  jwt:
+    secret: test-secret-key-that-is-long-enough-for-testing-purposes-only-!!
+  openai:
+    api-key: test-key
+  supabase:
+    url: http://localhost:9000
+    anon-key: test
+    service-key: test
+    bucket: test-bucket
+
+logging:
+  level:
+    com.talentflow: TRACE

@@ -1,0 +1,22 @@
+# ─── Docker Compose — Desenvolvimento Local ──────────────────
+# PostgreSQL é hospedado no Supabase (produção/staging).
+# Este compose sobe APENAS Redis local para desenvolvimento.
+#
+# Para usar PostgreSQL local em vez de Supabase, descomente o serviço "postgres".
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: talentflow-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redisdata:

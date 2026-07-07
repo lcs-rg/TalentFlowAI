@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* ─── TalentFlow Design System — Vinho Premium ────── */
+/* Ref: docs/design-system.md */
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  /* Base */
+  --color-bg: #120C10;
+  --color-bg-elevated: #22161B;
+  --color-bg-elevated-2: #2C1D24;
+  --color-border: #3A2530;
+  --color-border-strong: #4A2E3B;
+
+  /* Brand */
+  --color-primary: #7A284B;
+  --color-primary-hover: #93315C;
+  --color-accent: #D58DAA;
+
+  /* Text */
+  --color-text-primary: #F7F3F4;
+  --color-text-secondary: #B79AA3;
+  --color-text-disabled: #6B565D;
+
+  /* Status — nunca usar verde/vermelho/azul genérico */
+  --color-status-success: #C9A227;
+  --color-status-info: #8C7AA6;
+  --color-status-warning: #D98F4E;
+  --color-status-danger: #B3413F;
+
+  /* Spacing (4px base) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+/* Base layer — Vinho Premium background */
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+/* Scrollbar — subtle, not distracting */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-disabled); }

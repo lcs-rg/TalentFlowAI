@@ -1,0 +1,16 @@
+Extraia as seguintes informações do currículo fornecido e retorne como JSON estruturado.
+
+Campos a extrair:
+- full_name: nome completo
+- email: email
+- phone: telefone
+- summary: resumo profissional (máximo 200 caracteres)
+- skills: array de habilidades técnicas
+- experience: array de {company, title, start_date, end_date, description}
+- education: array de {institution, degree, field, year}
+- languages: array de idiomas com nível
+
+Retorne APENAS JSON válido, sem texto adicional.
+
+Currículo:
+{{resume_text}}
