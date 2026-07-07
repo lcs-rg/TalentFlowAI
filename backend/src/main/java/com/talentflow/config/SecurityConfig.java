@@ -1,6 +1,7 @@
 package com.talentflow.config;
 
 import com.talentflow.infrastructure.security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,12 +29,15 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitFilter rateLimitFilter;
     private final SecurityHeadersFilter securityHeadersFilter;
+    private final String corsAllowedOrigins;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          RateLimitFilter rlf, SecurityHeadersFilter shf) {
+                          RateLimitFilter rlf, SecurityHeadersFilter shf,
+                          @Value("${app.cors.allowed-origins:http://localhost:3000}") String corsAllowedOrigins) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitFilter = rlf;
         this.securityHeadersFilter = shf;
+        this.corsAllowedOrigins = corsAllowedOrigins;
     }
 
     @Bean
@@ -67,10 +71,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-            "http://localhost:3000",
-            "https://*.vercel.app"
-        ));
+        config.setAllowedOriginPatterns(List.of(corsAllowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

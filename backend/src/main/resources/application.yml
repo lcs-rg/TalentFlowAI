@@ -69,6 +69,14 @@ app:
   ai-service:
     url: ${AI_SERVICE_URL:http://localhost:8000}
 
+  # CORS
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+
+  # Cookie (set secure=true in production over HTTPS)
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+
   # Supabase (Storage + DB admin)
   supabase:
     project-ref: ${SUPABASE_PROJECT_REF:}

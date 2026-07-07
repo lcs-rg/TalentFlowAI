@@ -8,6 +8,7 @@ import com.talentflow.presentation.dto.response.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,13 @@ import java.util.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final boolean cookieSecure;
 
-    public AuthController(AuthService authService) { this.authService = authService; }
+    public AuthController(AuthService authService,
+                          @Value("${app.cookie.secure:false}") boolean cookieSecure) {
+        this.authService = authService;
+        this.cookieSecure = cookieSecure;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest req, HttpServletResponse res) {
@@ -68,10 +74,10 @@ public class AuthController {
     private void setRefreshCookie(HttpServletResponse res, String token) {
         Cookie cookie = new Cookie("refresh_token", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);  // false for localhost dev; set true in production
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
-        cookie.setMaxAge((int)(30 * 24 * 60 * 60)); // 30 days
-        cookie.setAttribute("SameSite", "Lax");
+        cookie.setMaxAge((int)(30 * 24 * 60 * 60));
+        cookie.setAttribute("SameSite", cookieSecure ? "Strict" : "Lax");
         res.addCookie(cookie);
     }
 }
