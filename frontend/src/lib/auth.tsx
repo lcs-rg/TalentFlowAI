@@ -31,15 +31,22 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const TOKEN_KEY = "talentflow-token";
+const USER_KEY = "talentflow-user";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Rehydrate session on mount
   useEffect(() => {
-    // Try to get user from stored token (session rehydration)
-    const stored = localStorage.getItem("talentflow-user");
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
+    const storedUser = localStorage.getItem(USER_KEY);
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    if (storedUser && storedToken) {
+      try {
+        setUser(JSON.parse(storedUser));
+        api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+      } catch { /* ignore */ }
     }
     setLoading(false);
   }, []);
@@ -49,19 +56,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (tenantSlug) payload.tenantSlug = tenantSlug;
     const { data: res } = await api.post("/api/v1/auth/login", payload);
     const { accessToken, refreshToken, user: u } = res.data;
-    // Store refresh in httpOnly, access in memory (via interceptor)
-    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Strict; Secure`;
+
+    // Store token for session persistence
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-    localStorage.setItem("talentflow-user", JSON.stringify(u));
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+
+    // Refresh token cookie (no Secure in dev, so it works on localhost)
+    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+
     setUser(u);
   };
 
   const register = async (data: RegisterData) => {
     const { data: res } = await api.post("/api/v1/auth/register", data);
     const { accessToken, refreshToken, user: u } = res.data;
-    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Strict; Secure`;
+
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-    localStorage.setItem("talentflow-user", JSON.stringify(u));
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+
+    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+
     setUser(u);
   };
 
@@ -69,7 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await api.post("/api/v1/auth/logout"); } catch { /* ignore */ }
     delete api.defaults.headers.common["Authorization"];
     document.cookie = "refreshToken=; path=/; max-age=0";
-    localStorage.removeItem("talentflow-user");
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
     setUser(null);
   };
 

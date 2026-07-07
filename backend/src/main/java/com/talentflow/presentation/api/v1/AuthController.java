@@ -68,10 +68,10 @@ public class AuthController {
     private void setRefreshCookie(HttpServletResponse res, String token) {
         Cookie cookie = new Cookie("refresh_token", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(false);  // false for localhost dev; set true in production
         cookie.setPath("/");
         cookie.setMaxAge((int)(30 * 24 * 60 * 60)); // 30 days
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", "Lax");
         res.addCookie(cookie);
     }
 }
