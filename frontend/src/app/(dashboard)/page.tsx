@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { api } from "@/lib/api";
-import { Briefcase, Users, Calendar, TrendingUp, Plus, ArrowRight } from "lucide-react";
+import { Briefcase, Users, Calendar, TrendingUp, Sparkles, Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface DashboardData {
@@ -11,6 +11,9 @@ interface DashboardData {
   totalCandidates: number;
   interviewsScheduled: number;
   hiresThisMonth: number;
+  avgMatchScore: number;
+  topCandidates: { id: string; name: string; email: string; score: number }[];
+  pipelineHealth: Record<string, number>;
 }
 
 const stats = [
@@ -45,7 +48,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map(({ key, label, icon: Icon }, i) => (
           <motion.div
             key={key}
@@ -72,7 +75,61 @@ export default function DashboardPage() {
             </div>
           </motion.div>
         ))}
+
+        {/* V2: AI Score card */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.25 }}
+        >
+          <div className="rounded-xl bg-bg-elevated border border-accent/20 p-4 bg-accent/5">
+            <div className="flex items-start justify-between">
+              <div className="rounded-lg bg-accent/20 p-1.5">
+                <Sparkles size={14} className="text-accent" />
+              </div>
+            </div>
+            <div className="mt-3">
+              {isLoading ? (
+                <div className="h-7 w-16 animate-pulse rounded bg-bg-elevated-2" />
+              ) : (
+                <p className="text-xl font-semibold text-accent font-mono tabular-nums">
+                  {data?.avgMatchScore != null ? Math.round(data.avgMatchScore * 100) : 0}%
+                </p>
+              )}
+              <p className="mt-0.5 text-xs text-text-secondary">Score médio IA</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
+
+      {/* AI Recommendations */}
+      {data?.topCandidates && data.topCandidates.length > 0 && (
+        <section>
+          <h2 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-1.5">
+            <Sparkles size={13} className="text-accent" /> Top candidatos
+          </h2>
+          <div className="space-y-1.5">
+            {data.topCandidates.slice(0, 3).map((c, i) => (
+              <Link key={c.id} href={`/candidates/${c.id}`}>
+                <div className="rounded-lg bg-bg-elevated border border-border p-3 hover:bg-bg-elevated-2 transition-colors flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-accent text-xs font-medium">
+                      {c.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-primary">{c.name}</p>
+                      <p className="text-xs text-text-disabled">{c.email}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-accent font-mono">
+                    {Math.round((c.score ?? 0) * 100)}%
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Quick Actions */}
       <section>
@@ -102,29 +159,6 @@ export default function DashboardPage() {
               </Link>
             </motion.div>
           ))}
-        </div>
-      </section>
-
-      {/* Empty State */}
-      <section>
-        <h2 className="text-sm font-medium text-text-secondary mb-3">Atividade recente</h2>
-        <div className="rounded-xl bg-bg-elevated border border-border p-8">
-          <div className="flex flex-col items-center py-4 text-center">
-            <div className="rounded-full bg-bg-elevated-2 p-2.5 mb-3">
-              <Briefcase size={18} className="text-text-disabled" />
-            </div>
-            <p className="font-display text-lg text-text-primary">Nenhuma vaga publicada ainda</p>
-            <p className="mt-1 text-sm text-text-secondary max-w-xs">
-              Crie sua primeira vaga para começar a recrutar com inteligência.
-            </p>
-            <div className="mt-4">
-              <Link href="/jobs/new">
-                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-bg-elevated-2 hover:bg-bg border border-border text-text-secondary text-xs transition-colors">
-                  <Plus size={12} /> Criar vaga
-                </button>
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
     </div>

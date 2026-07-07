@@ -105,6 +105,16 @@ export default function JobDetailPage() {
     },
   });
 
+  // V2: recommended candidates via semantic search
+  const { data: recommended } = useQuery({
+    queryKey: ["recommended-candidates", id],
+    queryFn: async () => {
+      const { data: res } = await api.get(`/api/v1/ai/recommend-candidates/${id}?topK=5`);
+      return res.data as { id: string; name: string; email: string; hasResume: boolean }[];
+    },
+    enabled: !!id,
+  });
+
   const publishMutation = useMutation({
     mutationFn: async () => {
       await api.patch(`/api/v1/jobs/${id}/publish`);
@@ -178,6 +188,32 @@ export default function JobDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* V2: Recommended Candidates */}
+      {recommended && recommended.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-secondary mb-2 flex items-center gap-1.5">
+            <Sparkles size={13} className="text-accent" /> Candidatos recomendados (IA)
+          </h2>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {recommended.map((c) => (
+              <Link key={c.id} href={`/candidates/${c.id}`}>
+                <Card padding="sm" hover className="w-48 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/20 text-accent text-[11px] font-medium">
+                      {c.name[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-primary truncate">{c.name}</p>
+                      <p className="text-[10px] text-tertiary truncate">{c.email}</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Pipeline Kanban */}
       <div>
