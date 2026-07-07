@@ -66,10 +66,29 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest req) {
-        Tenant tenant = tenantRepo.findBySlug(req.tenantSlug())
-                .orElseThrow(() -> new IllegalArgumentException("Empresa não encontrada"));
-        User user = userRepo.findByEmail(tenant.getId(), req.email())
-                .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas"));
+        Tenant tenant;
+        User user;
+
+        if (req.tenantSlug() != null && !req.tenantSlug().isBlank()) {
+            // Slug provided — direct lookup
+            tenant = tenantRepo.findBySlug(req.tenantSlug())
+                    .orElseThrow(() -> new IllegalArgumentException("Empresa não encontrada"));
+            user = userRepo.findByEmail(tenant.getId(), req.email())
+                    .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas"));
+        } else {
+            // No slug — search across all tenants
+            List<User> users = userRepo.findByEmailAcrossTenants(req.email());
+            if (users.isEmpty()) {
+                throw new IllegalArgumentException("Credenciais inválidas");
+            }
+            if (users.size() > 1) {
+                throw new IllegalArgumentException("MULTIPLE_TENANTS: Email existe em múltiplas empresas. Informe o slug.");
+            }
+            user = users.get(0);
+            tenant = tenantRepo.findById(user.getTenantId())
+                    .orElseThrow(() -> new IllegalArgumentException("Empresa não encontrada"));
+        }
+
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash()))
             throw new IllegalArgumentException("Credenciais inválidas");
 

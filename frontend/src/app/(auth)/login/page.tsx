@@ -13,17 +13,24 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenantSlug, setTenantSlug] = useState("");
+  const [needsSlug, setNeedsSlug] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password, tenantSlug);
+      await login(email, password, needsSlug ? tenantSlug : "");
       toast.success("Bem-vindo de volta!");
       router.push("/");
-    } catch {
-      toast.error("Credenciais inválidas.");
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || "Credenciais inválidas.";
+      if (msg.includes("MULTIPLE_TENANTS")) {
+        setNeedsSlug(true);
+        toast.error("Email encontrado em múltiplas empresas. Informe o slug.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -46,21 +53,24 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-text-secondary">Slug da empresa</label>
-            <input
-              type="text" value={tenantSlug} onChange={(e) => setTenantSlug(e.target.value)}
-              className="w-full h-9 rounded-lg bg-bg-elevated px-3 text-sm text-text-primary placeholder:text-text-disabled border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-              placeholder="minha-empresa" autoFocus required
-            />
-          </div>
+          {needsSlug && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-text-secondary">Slug da empresa</label>
+              <input
+                type="text" value={tenantSlug} onChange={(e) => setTenantSlug(e.target.value)}
+                className="w-full h-9 rounded-lg bg-bg-elevated px-3 text-sm text-text-primary placeholder:text-text-disabled border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                placeholder="minha-empresa" autoFocus required
+              />
+              <p className="text-[11px] text-status-warning">Seu email está em múltiplas empresas. Informe o slug.</p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-text-secondary">Email</label>
             <input
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               className="w-full h-9 rounded-lg bg-bg-elevated px-3 text-sm text-text-primary placeholder:text-text-disabled border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-              placeholder="seu@email.com" required
+              placeholder="seu@email.com" autoFocus={!needsSlug} required
             />
           </div>
 

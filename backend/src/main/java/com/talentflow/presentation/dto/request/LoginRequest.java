@@ -10,6 +10,5 @@ public record LoginRequest(
     @NotBlank(message = "Senha é obrigatória")
     String password,
 
-    @NotBlank(message = "Slug da empresa é obrigatório")
-    String tenantSlug
+    String tenantSlug  // opcional — só necessário se email existir em múltiplos tenants
 ) {}

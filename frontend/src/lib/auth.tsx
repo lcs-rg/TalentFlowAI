@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string, tenantSlug: string) => {
-    const { data: res } = await api.post("/api/v1/auth/login", { email, password, tenantSlug });
+    const payload: any = { email, password };
+    if (tenantSlug) payload.tenantSlug = tenantSlug;
+    const { data: res } = await api.post("/api/v1/auth/login", payload);
     const { accessToken, refreshToken, user: u } = res.data;
     // Store refresh in httpOnly, access in memory (via interceptor)
     document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Strict; Secure`;

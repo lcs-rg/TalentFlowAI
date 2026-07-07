@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +15,9 @@ interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
 
     @Query("SELECT COUNT(u) > 0 FROM UserJpaEntity u WHERE u.tenantId = :tenantId AND u.email = :email")
     boolean existsByTenantIdAndEmail(UUID tenantId, String email);
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.email = :email")
+    List<UserJpaEntity> findByEmail(String email);
 }
 
 @Repository
@@ -53,6 +57,12 @@ class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean existsByEmail(UUID tenantId, String email) {
         return jpaRepository.existsByTenantIdAndEmail(tenantId, email.toLowerCase());
+    }
+
+    @Override
+    public List<User> findByEmailAcrossTenants(String email) {
+        return jpaRepository.findByEmail(email.toLowerCase()).stream()
+                .map(this::toDomain).toList();
     }
 
     private User toDomain(UserJpaEntity e) {
