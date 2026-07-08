@@ -18,6 +18,7 @@ import java.util.UUID;
 @Table(name = "jobs")
 class JobJpaEntity {
     @Id @Column(name = "id") UUID id;
+    @Column(name = "tenant_id") UUID tenantId;
     @Column(name = "company_id") UUID companyId;
     @Column(name = "team_id") UUID teamId;
     @Column(name = "title") String title;
@@ -41,6 +42,7 @@ class JobJpaEntity {
 
     // Getters and setters
     public UUID getId() { return id; } public void setId(UUID id) { this.id = id; }
+    public UUID getTenantId() { return tenantId; } public void setTenantId(UUID v) { this.tenantId = v; }
     public UUID getCompanyId() { return companyId; } public void setCompanyId(UUID companyId) { this.companyId = companyId; }
     public UUID getTeamId() { return teamId; } public void setTeamId(UUID v) { this.teamId = v; }
     public String getTitle() { return title; } public void setTitle(String title) { this.title = title; }
@@ -151,6 +153,7 @@ class JobRepositoryImpl implements JobRepository {
     private JobJpaEntity toEntity(Job job) {
         JobJpaEntity e = new JobJpaEntity();
         e.setId(job.getId());
+        e.setTenantId(job.getCompanyId());  // tenant_id = company_id (shared schema)
         e.setCompanyId(job.getCompanyId());
         e.setTeamId(job.getTeamId());
         e.setTitle(job.getTitle());

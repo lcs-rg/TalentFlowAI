@@ -33,7 +33,11 @@ export default function NewJobPage() {
       toast.success("Vaga publicada!");
       router.push(`/jobs/${data.data.id}`);
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || err.response?.data?.error?.errors?.[0]?.message || "Erro ao criar vaga";
+      console.error("Create job error:", err);
+      const msg = err.response?.data?.error?.message 
+        || err.response?.data?.error?.errors?.[0]?.message 
+        || err.message
+        || "Erro ao criar vaga";
       toast.error(msg);
     } finally { setLoading(false); }
   }
