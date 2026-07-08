@@ -149,6 +149,7 @@ class CandidateJpaEntity {
     @Column(name = "deleted_at") Instant deletedAt;
     @Column(name = "deleted_by") UUID deletedBy;
     @Column(name = "password_hash") String passwordHash;
+    @Column(name = "status") String status = "NEW";
 
     public UUID getId() { return id; } public void setId(UUID v) { this.id = v; }
     public String getName() { return name; } public void setName(String v) { this.name = v; }
@@ -163,6 +164,7 @@ class CandidateJpaEntity {
     public Instant getDeletedAt() { return deletedAt; } public void setDeletedAt(Instant v) { this.deletedAt = v; }
     public UUID getDeletedBy() { return deletedBy; } public void setDeletedBy(UUID v) { this.deletedBy = v; }
     public String getPasswordHash() { return passwordHash; } public void setPasswordHash(String v) { this.passwordHash = v; }
+    public String getStatus() { return status; } public void setStatus(String v) { this.status = v; }
 }
 
 interface CandidateJpaRepository extends JpaRepository<CandidateJpaEntity, UUID> {
