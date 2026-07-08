@@ -70,7 +70,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleGeneral(
             Exception ex, HttpServletRequest request) {
         log.error("Internal error: {} [path={}]", ex.getMessage(), request.getRequestURI(), ex);
+        // Include message in dev for debugging; remove in production
+        String msg = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(500, "Erro interno do servidor"));
+                .body(ApiResponse.error(500, msg));
     }
 }
