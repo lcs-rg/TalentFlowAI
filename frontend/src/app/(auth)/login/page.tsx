@@ -97,6 +97,12 @@ export default function LoginPage() {
             Criar conta gratuita
           </Link>
         </p>
+        <p className="text-center text-xs text-text-disabled mt-2">
+          É candidato?{" "}
+          <Link href="/candidate/login" className="text-accent hover:underline transition-colors">
+            Portal do Candidato
+          </Link>
+        </p>
       </motion.div>
     </div>
   );

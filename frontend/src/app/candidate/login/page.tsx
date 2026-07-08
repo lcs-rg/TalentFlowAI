@@ -78,6 +78,12 @@ export default function CandidateLoginPage() {
             Cadastre-se
           </Link>
         </p>
+        <p className="text-center text-xs text-tertiary mt-2">
+          É empresa?{" "}
+          <Link href="/login" className="text-accent hover:underline">
+            Portal da Empresa
+          </Link>
+        </p>
       </Card>
     </div>
   );
