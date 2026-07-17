@@ -1,43 +1,52 @@
 @import "tailwindcss";
 
-/* ─── TalentFlow Design System — Vinho Premium ────── */
-/* Ref: docs/design-system.md */
+/* ─── TalentFlow Design System — Vinho Premium v2 ─── */
+/* Ref: docs/design-system.md + afrexai-ui-design-system + Linear.app patterns */
 
 @theme {
+  /* Typography */
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Base */
-  --color-bg: #120C10;
-  --color-bg-elevated: #22161B;
-  --color-bg-elevated-2: #2C1D24;
-  --color-border: #3A2530;
-  --color-border-strong: #4A2E3B;
+  /* Surfaces — luminance stepping (Linear-inspired) */
+  --color-bg: #0E0A0C;
+  --color-bg-elevated: #1A1116;
+  --color-bg-elevated-2: #241820;
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* Borders — semi-transparent (Linear-inspired) */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.10);
+  --color-border-focus: rgba(213, 141, 170, 0.3);
 
   /* Brand */
   --color-primary: #7A284B;
   --color-primary-hover: #93315C;
   --color-accent: #D58DAA;
+  --color-accent-muted: rgba(213, 141, 170, 0.15);
 
-  /* Text */
+  /* Text — never pure white (eye strain) */
   --color-text-primary: #F7F3F4;
   --color-text-secondary: #B79AA3;
-  --color-text-disabled: #6B565D;
+  --color-text-tertiary: #7A6670;
+  --color-text-disabled: #4D3E45;
 
-  /* Status — nunca usar verde/vermelho/azul genérico */
+  /* Status — "adega" scale (never generic red/green/blue) */
   --color-status-success: #C9A227;
   --color-status-info: #8C7AA6;
   --color-status-warning: #D98F4E;
   --color-status-danger: #B3413F;
 
-  /* Spacing (4px base) */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  /* Spacing — 4px base */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
 }
 
-/* Base layer — Vinho Premium background */
+/* ─── Base Layer ─────────────────────────────────── */
 @layer base {
   body {
     background-color: var(--color-bg);
@@ -49,13 +58,68 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  * {
-    border-color: var(--color-border);
+  * { border-color: var(--color-border); }
+
+  /* Focus ring — visible, accessible */
+  *:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(213, 141, 170, 0.25);
+    color: var(--color-text-primary);
   }
 }
 
-/* Scrollbar — subtle, not distracting */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-disabled); }
+/* ─── Scrollbar — subtle, not distracting ────────── */
+@layer base {
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* ─── Utility Animations ─────────────────────────── */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  .animate-slide-in-right {
+    animation: slideInRight 0.25s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Shimmer / Skeleton ─────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-bg-elevated) 25%, var(--color-bg-elevated-2) 50%, var(--color-bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
