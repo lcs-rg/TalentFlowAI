@@ -1,0 +1,50 @@
+# ─── Render Blueprint ─────────────────────────────────────
+# Conecte este repo no Render e ele detecta este arquivo.
+# Documentação: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: talentflow-api
+    env: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      # ── Supabase PostgreSQL ──
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      # ── JWT ──
+      - key: JWT_SECRET
+        generateValue: true
+      # ── AI / GROQ ──
+      - key: GROQ_API_KEY
+        sync: false
+      # ── AI Service (Python) ──
+      - key: AI_SERVICE_URL
+        sync: false
+      # ── CORS ──
+      - key: CORS_ORIGINS
+        sync: false
+      # ── Cookie ──
+      - key: COOKIE_SECURE
+        value: "true"
+      # ── Supabase Storage ──
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_PROJECT_REF
+        sync: false
+      # ── Redis ──
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
